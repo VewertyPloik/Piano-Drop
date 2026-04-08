@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Piano Drop</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --dark: #1e1e2f;
+            --darker: #10101a;
+            --text-light: #f4f4f9;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: var(--dark); font-family: 'Nunito', sans-serif;
+            overflow: hidden; touch-action: none; user-select: none;
+            color: var(--text-light);
+        }
+        /* Screen Management */
+        .screen {
+            display: none; width: 100%; height: 100%; position: absolute;
+            top: 0; left: 0; flex-direction: column;
+        }
+        .screen.active { display: flex; }
+        /* Overlays */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .overlay.active { display: flex; }
+    
+        .overlay h1 { font-size: 3rem; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
+        .overlay p { font-size: 1.2rem; margin-bottom: 20px; color: #ccc; text-align: center; }
+        /* Buttons & Selects */
+        button {
+            padding: 15px 30px; font-size: 18px; font-family: 'Nunito', sans-serif;
+            border: none; border-radius: 30px; outline: none; font-weight: 900;
+            cursor: pointer; transition: transform 0.1s, box-shadow 0.2s;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; box-shadow: 0 4px 15px rgba(0,210,255,0.4); margin: 10px;
+        }
+        button:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(0,210,255,0.4); }
+        button.danger { background: linear-gradient(135deg, #ff416c, #ff4b2b); box-shadow: 0 4px 15px rgba(255,65,108,0.4); }
+        button.secondary { background: linear-gradient(135deg, #4b6cb7, #182848); box-shadow: 0 4px 15px rgba(24,40,72,0.4); }
+        .difficulty-container {
+            text-align: center; margin-bottom: 20px; font-size: 1.1rem;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .difficulty-container select {
+            padding: 8px 15px; border-radius: 10px; background: #2a2a40; color: white;
+            border: 2px solid var(--primary); outline: none; font-family: 'Nunito', sans-serif;
+            font-weight: bold; cursor: pointer; font-size: 1rem;
+        }
+        /* Home Screen */
+        #home-screen { padding: 20px; box-sizing: border-box; align-items: center; background: #12121e; overflow-y: auto; }
+        .logo { font-size: 2.5rem; font-weight: 900; margin: 20px 0 10px 0; background: -webkit-linear-gradient(#00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center;}
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 600px; padding-bottom: 30px;}
+        .card {
+            background: #2a2a40; border-radius: 15px; padding: 15px; text-align: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s;
+            border: 2px solid transparent; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .card:active { transform: scale(0.95); }
+        .card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
+        .card p { margin: 0; font-size: 0.8rem; color: #dcdcdc; font-weight: bold; }
+        /* Custom Thumbnail Generator CSS */
+        .thumb-container {
+            width: 100%; height: 90px; border-radius: 10px; position: relative; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        .thumb-piano {
+            width: 100%; height: 30%; display: flex; background: #000; border-top: 2px solid #222; position: relative; z-index: 5;
+        }
+        .thumb-white { flex: 1; background: #eee; border-right: 1px solid #ccc; border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
+        .thumb-white:last-child { border-right: none; }
+        .thumb-black { position: absolute; width: 8%; height: 60%; background: linear-gradient(to bottom, #333, #000); top: 0; transform: translateX(-50%); border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
+        .thumb-ball { position: absolute; width: 14px; height: 14px; border-radius: 50%; z-index: 2; transform: translateX(-50%); border: 2px solid rgba(255,255,255,0.8); }
+        /* Preview Screen */
+        #preview-screen { transition: background 0.5s ease; }
+        .preview-content {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.4); padding: 20px; text-align: center; backdrop-filter: blur(5px);
+        }
+        .stats-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; margin: 20px 0; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .stats-box div { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1rem; font-weight: bold;}
+        /* Game Area */
+        #game-area { flex-grow: 1; position: relative; width: 100%; }
+        #game-canvas { display: block; width: 100%; height: 100%; }
+    
+        #top-bar {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center; z-index: 10;
+        }
+        #top-bar button { padding: 8px 15px; font-size: 16px; margin: 0; border-radius: 10px; }
+        #score-display { font-size: 1.5rem; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        /* Piano */
+        .piano-container { height: 35%; min-height: 180px; display: flex; position: relative; background: #111; border-top: 5px solid #000; box-shadow: 0 -10px 20px rgba(0,0,0,0.5); z-index: 20; }
+        .key {
+            flex: 1; box-sizing: border-box; border: 1px solid #ccc; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+            background: linear-gradient(to bottom, #fff 0%, #eee 100%); box-shadow: inset 0 0 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.5);
+            position: relative; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 15px; font-size: 14px;
+            color: #666; font-weight: bold; transition: background 0.1s;
+        }
+        .key.active { background: linear-gradient(to bottom, #ddd 0%, #ccc 100%); box-shadow: inset 0 2px 6px rgba(0,0,0,0.4); color: var(--primary); }
+    
+        /* Dynamic Hit Lighting Effects */
+        .key.ball-hit {
+            background: #fff;
+            box-shadow: inset 0 0 25px var(--hit-color, #00d2ff), 0 -5px 25px var(--hit-color, #00d2ff);
+            color: #000; border-color: var(--hit-color, #00d2ff);
+        }
+        .black-key {
+            position: absolute; width: 8%; height: 60%; background: linear-gradient(to bottom, #333 0%, #000 100%); z-index: 2;
+            border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.6); transform: translateX(-50%);
+        }
+        .black-key.active { background: linear-gradient(to bottom, #111 0%, #000 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
+    
+        .black-key.ball-hit {
+            background: #444;
+            box-shadow: inset 0 0 15px var(--hit-color, #00d2ff), 0 0 20px var(--hit-color, #00d2ff);
+            border-bottom: 2px solid var(--hit-color, #00d2ff);
+        }
+        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--darker); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 999; cursor: pointer; text-align: center; padding: 20px;}
+    
+        #countdown-text { font-size: 8rem; font-weight: 900; text-shadow: 0 0 30px var(--primary); }
+    </style>
+</head>
+<body>
+    <div id="start-overlay">
+        <h1 style="margin-bottom: 20px;">Welcome to Piano Drop!</h1>
+        <p>Tap anywhere to start</p>
+    </div>
+    <div id="home-screen" class="screen">
+        <div class="logo">Piano Drop</div>
+        <div class="difficulty-container">
+            <label for="diff-select">Difficulty: </label>
+            <select id="diff-select" onchange="changeDifficulty(this.value)">
+                <option value="0.50">Beginner (0.50x)</option>
+                <option value="0.75">Amateur (0.75x)</option>
+                <option value="1" selected>Normal (1x)</option>
+                <option value="1.25">Semi-Pro (1.25x)</option>
+                <option value="1.5">Pro (1.5x)</option>
+                <option value="2">Legend (2x)</option>
+            </select>
+        </div>
+        <div class="grid" id="song-grid">
+            </div>
+    </div>
+    <div id="preview-screen" class="screen">
+        <div class="preview-content">
+            <h1 id="preview-title" style="font-size: 2.5rem; margin:0; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">Song Title</h1>
+            <p id="preview-length" style="font-size: 1.2rem; font-weight: bold; margin-top: 5px;">Length: 0:00</p>
+            <div class="stats-box">
+                <div><span>Best Score:</span> <span id="stat-best" style="color: #4ade80;">0%</span></div>
+                <div><span>Recent Score:</span> <span id="stat-recent" style="color: #60a5fa;">0%</span></div>
+                <div><span>Attempts:</span> <span id="stat-attempts">0</span></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="secondary" onclick="showScreen('home-screen')">Back</button>
+                <button onclick="startGame()">Play Now</button>
+            </div>
+        </div>
+        <div class="piano-container" id="preview-piano"></div>
+    </div>
+    <div id="game-screen" class="screen">
+        <div id="top-bar">
+            <button onclick="pauseGame()">|| Pause</button>
+            <span id="score-display">0%</span>
+        </div>
+        <div id="game-area">
+            <canvas id="game-canvas"></canvas>
+        </div>
+        <div class="piano-container" id="game-piano"></div>
+    </div>
+    <div id="countdown-overlay" class="overlay">
+        <div id="countdown-text">3</div>
+    </div>
+    <div id="pause-overlay" class="overlay">
+        <h1>Paused</h1>
+        <button onclick="resumeGame()">Resume</button>
+        <button class="danger" onclick="quitToMenu()">Quit to Menu</button>
+    </div>
+    <div id="end-overlay" class="overlay">
+        <h1 id="end-title">Song Complete!</h1>
+        <p id="end-stats">Accuracy: 100% | Time: 1:30</p>
+        <button onclick="startGame()">Play Again</button>
+        <button class="secondary" onclick="showScreen('home-screen')">Main Menu</button>
+    </div>
+
+    <!-- Credit footer - bottom middle, low opacity -->
+    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik</div>
+
+    <script>
+        // --- DATA & CONFIG ---
+        let speedMultiplier = 1.0;
+        let fallSpeed = 2625 / speedMultiplier;
+        let beatSpeed = 450 / speedMultiplier;
+    
+        const noteColors = {
+            'C4': '#ff4136', 'C#4': '#ff4136',
+            'D4': '#ff851b', 'D#4': '#ff851b',
+            'E4': '#ffdc00',
+            'F4': '#2ecc40', 'F#4': '#2ecc40',
+            'G4': '#0074d9', 'G#4': '#0074d9',
+            'A4': '#b10dc9', 'A#4': '#b10dc9',
+            'B4': '#f012be',
+            'C5': '#39cccc'
+        };
+        // Added cardColor for the dynamic background feature!
+        const songDB = {
+            freePlay: {
+                title: "Free Play", cardColor: "#2a2a40", color: "linear-gradient(180deg, #10101a 0%, #2a2a40 100%)",
+                notes: []
+            },
+            jingleBells: {
+                title: "Jingle Bells", cardColor: "#1b4332", color: "linear-gradient(180deg, #114b5f 0%, #028090 100%)",
+                notes: ['E4','E4','E4','-','E4','E4','E4','-','E4','G4','C4','D4','E4','-','-','F4','F4','F4','F4','F4','E4','E4','E4','E4','D4','D4','E4','D4','-','G4']
+            },
+            odeToJoy: {
+                title: "Ode To Joy", cardColor: "#1b4332", color: "linear-gradient(180deg, #4a154b 0%, #8b2252 100%)",
+                notes: ['E4','E4','F4','G4','G4','F4','E4','D4','C4','C4','D4','E4','E4','-','D4','D4','-','E4','E4','F4','G4','G4','F4','E4','D4','C4','C4','D4','E4','D4','-','C4','C4']
+            },
+            twinkle: {
+                title: "Twinkle Twinkle", cardColor: "#1b4332", color: "linear-gradient(180deg, #0f2027 0%, #203a43 100%)",
+                notes: ['C4','C4','G4','G4','A4','A4','G4','-','F4','F4','E4','E4','D4','D4','C4','-','G4','G4','F4','F4','E4','E4','D4','-','C4','C4','G4','G4','A4','A4','G4']
+            },
+            mary: {
+                title: "Mary's Lamb", cardColor: "#1b4332", color: "linear-gradient(180deg, #134e5e 0%, #71b280 100%)",
+                notes: ['E4','D4','C4','D4','E4','E4','E4','-','D4','D4','D4','-','E4','G4','G4','-','E4','D4','C4','D4','E4','E4','E4','E4','D4','D4','E4','D4','C4']
+            },
+            rowBoat: {
+                title: "Row Your Boat", cardColor: "#1b4332", color: "linear-gradient(180deg, #1e3c72 0%, #2a5298 100%)",
+                notes: ['C4','-','C4','-','C4','D4','E4','-','E4','D4','E4','F4','G4','-','-','C5','C5','C5','G4','G4','G4','E4','E4','E4','C4','C4','C4','G4','F4','E4','D4','C4']
+            },
+            // --- NEW MEDIUM SONGS (Yellow) ---
+            happyBirthday: {
+                title: "Happy Birthday", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #b8860b 0%, #daa520 100%)",
+                notes: ['G4','G4','A4','-','G4','-','C5','-','B4','-','-','G4','G4','A4','-','G4','-','D4','-','C4','-','-','E4','E4','E4','-','C4','-','B4','-','A4']
+            },
+            oldMac: {
+                title: "Old MacDonald", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #8b4513 0%, #a0522d 100%)",
+                notes: ['G4','G4','G4','D4','E4','E4','D4','-','B4','B4','A4','A4','G4','-','D4','G4','G4','G4','D4','E4','E4','D4','-','B4','B4','A4','A4','G4']
+            },
+            yankee: {
+                title: "Yankee Doodle", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #4682b4 0%, #5f9ea0 100%)",
+                notes: ['C4','C4','D4','E4','C4','E4','D4','-','C4','C4','D4','E4','C4','-','B4','-','C4','C4','D4','E4','F4','E4','D4','C4','B4','G4','A4','B4','C4','C4']
+            },
+            londonBridge: {
+                title: "London Bridge", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #6a5acd 0%, #7b68ee 100%)",
+                notes: ['G4','A4','G4','F4','E4','F4','G4','-','D4','E4','F4','-','E4','F4','G4','-','G4','A4','G4','F4','E4','F4','G4','-','D4','-','G4','-','E4','C4']
+            },
+            lullaby: {
+                title: "Brahms Lullaby", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #483d8b 0%, #4169e1 100%)",
+                notes: ['E4','E4','G4','-','E4','E4','G4','-','E4','G4','C5','B4','A4','A4','G4','-','D4','E4','F4','D4','D4','E4','F4','-','D4','F4','B4','A4','G4','B4','C5']
+            },
+            frere: {
+                title: "Frère Jacques", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #2e8b57 0%, #3cb371 100%)",
+                notes: ['C4','D4','E4','C4','C4','D4','E4','C4','E4','F4','G4','-','E4','F4','G4','-','G4','A4','G4','F4','E4','C4','G4','A4','G4','F4','E4','C4']
+            },
+            raidersMarch: {
+                title: "Raiders March", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #b8860b 0%, #daa520 100%)",
+                notes: ['E4','F4','G4','C5','-','D4','E4','F4','-','G4','A4','B4','F4', '-','A4','B4','C5','D4','E4','-','-']
+            },
+            starWars: {
+                title: "Star Wars", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #b8860b 0%, #daa520 100%)",
+                notes: ['C4','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','F4','D4']
+            },
+            // --- NEW MEDIUM SONGS (Yellow) - Jurassic Park & Tek It ---
+            jurassicPark: {
+                title: "Jurassic Park",
+                cardColor: "#5c4a0a",
+                color: "linear-gradient(180deg, #1e3a2f 0%, #2e8b57 100%)",
+                notes: ['C5','B4','C5','G4','F4','-','C5','B4','C5','G4','F4','-','-','C5','B4','C5', '-','G4','G4','F4','F4']
+            },
+            tekIt: {
+                title: "Tek It",
+                cardColor: "#5c4a0a",
+                color: "linear-gradient(180deg, #4a2c6d 0%, #9b59b6 100%)",
+                notes: ['G4','-','-','E4','-','-','B4','-','-','G4','G4','E4','E4','B4','-','G4','-','G4', '-', '-','E4', '-', '-','B4', '-', '-','G4','G4','E4','E4','B4','-','G4']
+            },
+            // --- NEW HARD SONGS (Red) ---
+            furElise: {
+                title: "Für Elise", cardColor: "#521616", color: "linear-gradient(180deg, #4a0e0e 0%, #8b0000 100%)",
+                notes: ['E4','D#4','E4','D#4','E4','B4','D4','C5','A4','-','-','C4','E4','A4','B4','-','-','E4','G#4','B4','C5','-','-','E4','E4','D#4','E4','D#4','E4','B4','D4','C5','A4']
+            },
+            minuet: {
+                title: "Minuet in G", cardColor: "#521616", color: "linear-gradient(180deg, #8b008b 0%, #9932cc 100%)",
+                notes: ['D4','G4','A4','B4','C5','D4','G4','G4','E4','C5','D4','E4','F#4','G4','G4','-','C5','D4','C5','B4','A4','B4','C5','B4','A4','G4','F#4','G4','A4']
+            },
+            mountainKing: {
+                title: "Mountain King", cardColor: "#521616", color: "linear-gradient(180deg, #2f4f4f 0%, #008080 100%)",
+                notes: ['C4','D4','D#4','F4','G4','D#4','G4','-','F#4','D4','F#4','-','F4','C#4','F4','-','C4','D4','D#4','F4','G4','D#4','G4','B4','A#4','A4','G4','A#4']
+            },
+            canon: {
+                title: "Canon in C", cardColor: "#521616", color: "linear-gradient(180deg, #00008b 0%, #0000cd 100%)",
+                notes: ['E4','D4','C4','B4','A4','G4','A4','B4','E4','D4','C4','B4','A4','G4','A4','B4','C5','B4','A4','G4','F4','E4','F4','G4','C5','B4','A4','G4','F4','E4']
+            }
+        };
+        const pianoHTML = `
+            <div class="key" data-note="C4">C</div><div class="key" data-note="D4">D</div>
+            <div class="key" data-note="E4">E</div><div class="key" data-note="F4">F</div>
+            <div class="key" data-note="G4">G</div><div class="key" data-note="A4">A</div>
+            <div class="key" data-note="B4">B</div><div class="key" data-note="C5">C</div>
+            <div class="black-key" data-note="C#4" style="left: 12.5%;"></div>
+            <div class="black-key" data-note="D#4" style="left: 25%;"></div>
+            <div class="black-key" data-note="F#4" style="left: 50%;"></div>
+            <div class="black-key" data-note="G#4" style="left: 62.5%;"></div>
+            <div class="black-key" data-note="A#4" style="left: 75%;"></div>
+        `;
+        document.getElementById('preview-piano').innerHTML = pianoHTML;
+        document.getElementById('game-piano').innerHTML = pianoHTML;
+        // --- AUDIO ENGINE v2 - Mobile-optimized + debug logs ---
+        let audioCtx = null;
+        const frequencies = {
+            'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+            'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
+            'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25
+        };
+        function initAudio() {
+            if (audioCtx) return; // already created
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                console.log('🎵 AudioContext created → state:', audioCtx.state);
+                // Classic silent buffer unlock (required on iOS)
+                const buffer = audioCtx.createBuffer(1, 1, 22050);
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start(0);
+                console.log('🔇 Silent buffer played');
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        console.log('✅ AudioContext resumed successfully! State is now:', audioCtx.state);
+                    }).catch(err => console.error('❌ Resume failed:', err));
+                }
+            } catch (e) {
+                console.error('❌ Could not create AudioContext:', e);
+            }
+        }
+        function playSound(note) {
+            if (!audioCtx || !frequencies[note]) {
+                console.warn('⚠️ playSound skipped - no ctx or bad note');
+                return;
+            }
+            console.log(`🎹 playSound called for ${note} → current state: ${audioCtx.state}`);
+            const playNote = () => {
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(frequencies[note], audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime); // easy-to-hear volume
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 1.0);
+                    console.log(`✅ OSCILLATOR STARTED for ${note} — you should hear sound!`);
+                } catch (err) {
+                    console.error('❌ Oscillator error:', err);
+                }
+            };
+            if (audioCtx.state === 'suspended') {
+                console.log('⏳ Context suspended → calling resume() now...');
+                audioCtx.resume().then(() => {
+                    console.log('✅ Resume succeeded — playing note');
+                    playNote();
+                }).catch(err => {
+                    console.error('❌ Resume promise failed:', err);
+                });
+            } else {
+                playNote();
+            }
+        }
+        // --- STATE VARIABLES ---
+        let currentSongKey = null;
+        let activeDots = [];
+        let gameTime = 0, lastTime = 0;
+        let animationFrame;
+        let gameState = 'menu';
+        let totalNotes = 0, hits = 0;
+        let gameStartTime = 0, pausedTime = 0, startPauseStamp = 0;
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        const notePositions = {
+            'C4': 1/16, 'C#4': 2/16,
+            'D4': 3/16, 'D#4': 4/16,
+            'E4': 5/16,
+            'F4': 7/16, 'F#4': 8/16,
+            'G4': 9/16, 'G#4': 10/16,
+            'A4': 11/16, 'A#4': 12/16,
+            'B4': 13/16,
+            'C5': 15/16
+        };
+        // --- UI & CUSTOM THUMBNAIL GENERATOR ---
+        function changeDifficulty(value) {
+            speedMultiplier = parseFloat(value);
+            fallSpeed = 2625 / speedMultiplier;
+            beatSpeed = 450 / speedMultiplier;
+            buildHomeGrid(); // Update times displayed on cards
+            if (currentSongKey && document.getElementById('preview-screen').classList.contains('active')) {
+                openPreview(currentSongKey);
+            }
+        }
+        function generateThumbnailHTML(data) {
+            let html = `<div class="thumb-container" style="background: ${data.color}">`;
+        
+            // Add custom colorful dots representing the song!
+            if (data.notes.length > 0) {
+                let sampleNotes = data.notes.filter(n => n !== '-').slice(0, 3);
+                sampleNotes.forEach((n, i) => {
+                    let left = notePositions[n] * 100 + "%";
+                    let bottom = (35 + i * 20) + "%";
+                    let color = noteColors[n] || '#fff';
+                    html += `<div class="thumb-ball" style="left: ${left}; bottom: ${bottom}; background: ${color}; box-shadow: 0 0 10px ${color};"></div>`;
+                });
+            }
+            // Draw the tiny piano directly via CSS
+            html += `<div class="thumb-piano">`;
+            for(let i=0; i<8; i++) html += `<div class="thumb-white"></div>`;
+            html += `<div class="thumb-black" style="left: 12.5%;"></div>
+                     <div class="thumb-black" style="left: 25%;"></div>
+                     <div class="thumb-black" style="left: 50%;"></div>
+                     <div class="thumb-black" style="left: 62.5%;"></div>
+                     <div class="thumb-black" style="left: 75%;"></div>`;
+            html += `</div></div>`;
+            return html;
+        }
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'home-screen') buildHomeGrid();
+        }
+        function buildHomeGrid() {
+            const grid = document.getElementById('song-grid');
+            grid.innerHTML = '';
+            for (const [key, data] of Object.entries(songDB)) {
+                let lengthStr = data.notes.length === 0 ? "Endless Fun" : formatTime(((data.notes.length * beatSpeed) + fallSpeed) / 1000);
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Dynamically apply background color representing difficulty!
+                card.style.background = data.cardColor;
+            
+                card.innerHTML = `${generateThumbnailHTML(data)}<h3>${data.title}</h3><p>${lengthStr}</p>`;
+                card.onclick = () => openPreview(key);
+                grid.appendChild(card);
+            }
+        }
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+        function getStats(key) {
+            let stats = JSON.parse(localStorage.getItem('piano_' + key));
+            return stats || { best: 0, recent: 0, attempts: 0 };
+        }
+        function saveStats(key, accuracy) {
+            let stats = getStats(key);
+            stats.attempts++;
+            stats.recent = accuracy;
+            if (accuracy > stats.best) stats.best = accuracy;
+            localStorage.setItem('piano_' + key, JSON.stringify(stats));
+        }
+        function openPreview(key) {
+            currentSongKey = key;
+            const data = songDB[key];
+            if (key === 'freePlay') {
+                startGame();
+                return;
+            }
+        
+            document.getElementById('preview-screen').style.background = data.color;
+            document.getElementById('preview-title').innerText = data.title;
+            document.getElementById('preview-length').innerText = "Length: " + formatTime(((data.notes.length * beatSpeed) + fallSpeed) / 1000);
+        
+            const stats = getStats(key);
+            document.getElementById('stat-best').innerText = stats.best + "%";
+            document.getElementById('stat-recent').innerText = stats.recent + "%";
+            document.getElementById('stat-attempts').innerText = stats.attempts;
+        
+            showScreen('preview-screen');
+        }
+        // --- GAME CONTROLS ---
+        function startGame() {
+            initAudio();
+            const data = songDB[currentSongKey];
+            document.getElementById('game-area').style.background = data.color;
+            document.getElementById('score-display').innerText = currentSongKey === 'freePlay' ? "Free Play" : "0%";
+            document.getElementById('score-display').style.display = currentSongKey === 'freePlay' ? 'none' : 'block';
+        
+            showScreen('game-screen');
+        
+            resizeCanvas();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+            activeDots = []; totalNotes = 0; hits = 0; gameTime = 0; pausedTime = 0;
+        
+            if (currentSongKey !== 'freePlay') {
+                data.notes.forEach((note, index) => {
+                    if (note !== '-') {
+                        activeDots.push({ note: note, targetTime: (index * beatSpeed) + fallSpeed, hit: false, missed: false });
+                        totalNotes++;
+                    }
+                });
+                startCountdown();
+            } else {
+                gameState = 'playing';
+                lastTime = performance.now();
+                gameStartTime = performance.now();
+                cancelAnimationFrame(animationFrame);
+                loop(performance.now());
+            }
+        }
+        function startCountdown() {
+            gameState = 'countdown';
+            const overlay = document.getElementById('countdown-overlay');
+            const text = document.getElementById('countdown-text');
+            overlay.classList.add('active');
+        
+            let count = 3;
+            text.innerText = count;
+        
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    text.innerText = count;
+                } else if (count === 0) {
+                    text.innerText = "GO!";
+                } else {
+                    clearInterval(interval);
+                    overlay.classList.remove('active');
+                    gameState = 'playing';
+                    lastTime = performance.now();
+                    gameStartTime = performance.now();
+                    cancelAnimationFrame(animationFrame);
+                    loop(performance.now());
+                }
+            }, 1000);
+        }
+        function pauseGame() {
+            if (gameState !== 'playing') return;
+            gameState = 'paused';
+            startPauseStamp = performance.now();
+            document.getElementById('pause-overlay').classList.add('active');
+        }
+        function resumeGame() {
+            initAudio();
+            document.getElementById('pause-overlay').classList.remove('active');
+            pausedTime += performance.now() - startPauseStamp;
+            lastTime = performance.now();
+            gameState = 'playing';
+            loop(performance.now());
+        }
+        function quitToMenu() {
+            cancelAnimationFrame(animationFrame);
+            showScreen('home-screen');
+        }
+        function endGame() {
+            gameState = 'menu';
+            const accuracy = totalNotes > 0 ? parseFloat(((hits / totalNotes) * 100).toFixed(1)) : 0;
+            const timePlayed = formatTime(gameTime / 1000);
+        
+            saveStats(currentSongKey, accuracy);
+        
+            document.getElementById('end-title').innerText = accuracy > 80 ? "Awesome!" : "Good Try!";
+            document.getElementById('end-stats').innerText = `Accuracy: ${accuracy}% | Time: ${timePlayed}`;
+            document.getElementById('end-overlay').classList.add('active');
+        }
+    
+        function pressKeyWrapper(element) {
+            initAudio(); // Resume audio on any press to be safe
+            console.log('🔑 Key pressed → note:', element.dataset.note);
+            const note = element.dataset.note;
+            element.classList.add('active');
+            playSound(note);
+            if (gameState === 'playing' && currentSongKey !== 'freePlay') checkHit(note);
+        }
+        function releaseKeyWrapper(element) {
+            element.classList.remove('active');
+        }
+        document.addEventListener('mousedown', e => {
+            const el = e.target.closest('.key, .black-key');
+            if (el) pressKeyWrapper(el);
+        });
+        document.addEventListener('mouseup', e => {
+            document.querySelectorAll('.key.active, .black-key.active').forEach(releaseKeyWrapper);
+        });
+    
+        document.addEventListener('touchstart', e => {
+            if(e.target.closest('.key, .black-key')) e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (el && (el.classList.contains('key') || el.classList.contains('black-key'))) {
+                    pressKeyWrapper(el);
+                }
+            }
+        }, {passive: false});
+        document.addEventListener('touchend', e => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (el && (el.classList.contains('key') || el.classList.contains('black-key'))) {
+                    releaseKeyWrapper(el);
+                } else {
+                    document.querySelectorAll('.key.active, .black-key.active').forEach(releaseKeyWrapper);
+                }
+            }
+        });
+        function lightUpKeyVisual(note) {
+            const keys = document.getElementById('game-piano').querySelectorAll('.key, .black-key');
+            let color = noteColors[note] || '#00d2ff';
+            keys.forEach(k => {
+                if (k.dataset.note === note) {
+                    k.style.setProperty('--hit-color', color);
+                    k.classList.add('ball-hit');
+                    setTimeout(() => k.classList.remove('ball-hit'), 200);
+                }
+            });
+        }
+        function checkHit(playedNote) {
+            let closestDot = null;
+            let minDiff = Infinity;
+            for (let i = 0; i < activeDots.length; i++) {
+                let dot = activeDots[i];
+                if (!dot.hit && !dot.missed && dot.note === playedNote) {
+                    let timeDiff = Math.abs(gameTime - dot.targetTime);
+                
+                    if (timeDiff < 250 && timeDiff < minDiff) {
+                        minDiff = timeDiff;
+                        closestDot = dot;
+                    }
+                }
+            }
+            if (closestDot) {
+                closestDot.hit = true;
+          
+                if (minDiff <= 75) {
+                    hits += 1; // P
+                } else if (minDiff <= 150) {
+                    hits += 0.8; // G
+                } else {
+                    hits += 0.5; // O
+                }
+            
+                updateScore();
+                lightUpKeyVisual(playedNote);
+            }
+        }
+        function updateScore() {
+            if(totalNotes === 0) return;
+            const accuracy = ((hits / totalNotes) * 100).toFixed(1);
+            document.getElementById('score-display').innerText = `${accuracy}%`;
+        }
+    
+        function loop(timestamp) {
+            if (gameState !== 'playing') return;
+            let deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            gameTime += deltaTime;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (currentSongKey === 'freePlay') {
+                animationFrame = requestAnimationFrame(loop);
+                return;
+            }
+            // D
+            const targetY = canvas.height - 20;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(0, targetY, canvas.width, 5);
+            let dotsRemaining = false;
+            for (let i = activeDots.length - 1; i >= 0; i--) {
+                let dot = activeDots[i];
+            
+                if (dot.hit || dot.missed) continue;
+                dotsRemaining = true;
+                let timeRemaining = dot.targetTime - gameTime;
+            
+                // Spawn buffer
+                if (timeRemaining > fallSpeed) continue;
+                // Auto light-up key visual when ball hits the line
+                if (timeRemaining < 0 && timeRemaining > -50 && !dot.flashed) {
+                    dot.flashed = true;
+                    lightUpKeyVisual(dot.note);
+                }
+                if (timeRemaining < -300) {
+                    dot.missed = true;
+                    continue;
+                }
+                let y = canvas.height - (timeRemaining / fallSpeed) * canvas.height;
+                let x = canvas.width * notePositions[dot.note];
+                let ballColor = noteColors[dot.note] || '#00d2ff';
+                // Comet Trail
+                ctx.beginPath();
+                let grad = ctx.createLinearGradient(x, y, x, y - 60);
+                grad.addColorStop(0, ballColor);
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.fillRect(x - 15, y - 60, 30, 60);
+                // Colorful Dot
+                ctx.beginPath();
+                ctx.arc(x, y - 10, 18, 0, Math.PI * 2);
+                ctx.fillStyle = ballColor;
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
+            
+                // Outer Glow
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = ballColor;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            if (!dotsRemaining && gameTime > activeDots[activeDots.length - 1].targetTime + 1000) {
+                endGame();
+            } else {
+                animationFrame = requestAnimationFrame(loop);
+            }
+        }
+        // I
+        document.getElementById('start-overlay').addEventListener('click', function() {
+            initAudio();
+            this.style.display = 'none';
+            showScreen('home-screen');
+        });
+    </script>
+</body>
+</html>
