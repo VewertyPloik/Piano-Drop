@@ -32,7 +32,7 @@
             justify-content: center; align-items: center; z-index: 100;
         }
         .overlay.active { display: flex; }
-   
+  
         .overlay h1 { font-size: 3rem; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
         .overlay p { font-size: 1.2rem; margin-bottom: 20px; color: #ccc; text-align: center; }
         /* Buttons & Selects */
@@ -90,7 +90,7 @@
         /* Game Area */
         #game-area { flex-grow: 1; position: relative; width: 100%; }
         #game-canvas { display: block; width: 100%; height: 100%; }
-   
+  
         #top-bar {
             position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center; z-index: 10;
@@ -106,7 +106,7 @@
             color: #666; font-weight: bold; transition: background 0.1s;
         }
         .key.active { background: linear-gradient(to bottom, #ddd 0%, #ccc 100%); box-shadow: inset 0 2px 6px rgba(0,0,0,0.4); color: var(--primary); }
-   
+  
         /* Dynamic Hit Lighting Effects */
         .key.ball-hit {
             background: #fff;
@@ -118,21 +118,21 @@
             border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.6); transform: translateX(-50%);
         }
         .black-key.active { background: linear-gradient(to bottom, #111 0%, #000 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
-   
+  
         .black-key.ball-hit {
             background: #444;
             box-shadow: inset 0 0 15px var(--hit-color, #00d2ff), 0 0 20px var(--hit-color, #00d2ff);
             border-bottom: 2px solid var(--hit-color, #00d2ff);
         }
         #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--darker); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 999; cursor: pointer; text-align: center; padding: 20px;}
-   
+
         #countdown-text { font-size: 8rem; font-weight: 900; text-shadow: 0 0 30px var(--primary); }
     </style>
 </head>
 <body>
     <div id="start-overlay">
         <h1 style="margin-bottom: 20px;">Welcome to Piano Drop!</h1>
-        <p>Tap Anywhere To Start, Make sure your sound is on! (ringer on also)</p>
+        <p>Make sure your sound is on! (ringer on also)</p>
     </div>
     <div id="home-screen" class="screen">
         <div class="logo">Piano Drop</div>
@@ -197,7 +197,7 @@
         let speedMultiplier = 1.0;
         let fallSpeed = 2625 / speedMultiplier;
         let beatSpeed = 450 / speedMultiplier;
-   
+  
         const noteColors = {
             'C4': '#ff4136', 'C#4': '#ff4136',
             'D4': '#ff851b', 'D#4': '#ff851b',
@@ -265,18 +265,18 @@
             },
             raidersMarch: {
                 title: "Raiders March", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #B00000 0%, #E36868 100%)",
-                notes: ['E4','F4','G4','C5','-','D4','E4','F4','-','G4','A4','B4','F4', '-','A4','B4','C5','D4','E4','-','-']
+                notes: ['E4','F4','G4','C5','-','D4','E4','F4','-','G4','A4','B4','F4', '-','A4','B4','C5','D4','E4','-','E4','F4','G4','C4','-','D4','E4','F4','-','G4','A4','B4','F4','-','A4','B4','C4','D4','E4']
             },
             starWars: {
                 title: "Star Wars", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #07608C 0%, #2BE1FF 100%)",
-                notes: ['C4','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','F4','D4']
+                notes: ['C4','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','F4','D4','-','G4','G4','A4','A4','F4','E4','D4','C4','-','G4','D4']
             },
             // --- NEW MEDIUM SONGS (Yellow) - Jurassic Park & Tek It ---
             jurassicPark: {
                 title: "Jurassic Park",
                 cardColor: "#5c4a0a",
                 color: "linear-gradient(180deg, #1e3a2f 0%, #2e8b57 100%)",
-                notes: ['C5','B4','C5','G4','F4','-','C5','B4','C5','G4','F4','-','-','C5','B4','C5', '-','G4','G4','F4','F4']
+                notes: ['C5','B4','C5','G4','F4','-','C5','B4','C5','G4','F4','-','-','C5','B4','C5', '-','G4','G4','F4','F4','-','E4','F4','G4','E4','F4','G4','C5','A4','G4','F4','E4','F4']
             },
             tekIt: {
                 title: "Tek It",
@@ -421,7 +421,7 @@
         }
         function generateThumbnailHTML(data) {
             let html = `<div class="thumb-container" style="background: ${data.color}">`;
-       
+      
             // Add custom colorful dots representing the song!
             if (data.notes.length > 0) {
                 let sampleNotes = data.notes.filter(n => n !== '-').slice(0, 3);
@@ -458,7 +458,7 @@
                 card.className = 'card';
                 // Dynamically apply background color representing difficulty!
                 card.style.background = data.cardColor;
-           
+          
                 card.innerHTML = `${generateThumbnailHTML(data)}<h3>${data.title}</h3><p>${lengthStr}</p>`;
                 card.onclick = () => openPreview(key);
                 grid.appendChild(card);
@@ -487,16 +487,16 @@
                 startGame();
                 return;
             }
-       
+      
             document.getElementById('preview-screen').style.background = data.color;
             document.getElementById('preview-title').innerText = data.title;
             document.getElementById('preview-length').innerText = "Length: " + formatTime(((data.notes.length * beatSpeed) + fallSpeed) / 1000);
-       
+      
             const stats = getStats(key);
             document.getElementById('stat-best').innerText = stats.best + "%";
             document.getElementById('stat-recent').innerText = stats.recent + "%";
             document.getElementById('stat-attempts').innerText = stats.attempts;
-       
+      
             showScreen('preview-screen');
         }
         // --- GAME CONTROLS ---
@@ -506,14 +506,14 @@
             document.getElementById('game-area').style.background = data.color;
             document.getElementById('score-display').innerText = currentSongKey === 'freePlay' ? "Free Play" : "0%";
             document.getElementById('score-display').style.display = currentSongKey === 'freePlay' ? 'none' : 'block';
-       
+      
             showScreen('game-screen');
-       
+      
             resizeCanvas();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-       
+      
             activeDots = []; totalNotes = 0; hits = 0; gameTime = 0; pausedTime = 0;
-       
+      
             if (currentSongKey !== 'freePlay') {
                 data.notes.forEach((note, index) => {
                     if (note !== '-') {
@@ -535,10 +535,10 @@
             const overlay = document.getElementById('countdown-overlay');
             const text = document.getElementById('countdown-text');
             overlay.classList.add('active');
-       
+      
             let count = 3;
             text.innerText = count;
-       
+      
             const interval = setInterval(() => {
                 count--;
                 if (count > 0) {
@@ -578,14 +578,14 @@
             gameState = 'menu';
             const accuracy = totalNotes > 0 ? parseFloat(((hits / totalNotes) * 100).toFixed(1)) : 0;
             const timePlayed = formatTime(gameTime / 1000);
-       
+      
             saveStats(currentSongKey, accuracy);
-       
+      
             document.getElementById('end-title').innerText = accuracy > 80 ? "Awesome!" : "Good Try!";
             document.getElementById('end-stats').innerText = `Accuracy: ${accuracy}% | Time: ${timePlayed}`;
             document.getElementById('end-overlay').classList.add('active');
         }
-   
+  
         function pressKeyWrapper(element) {
             initAudio(); // Resume audio on any press to be safe
             console.log('🔑 Key pressed → note:', element.dataset.note);
@@ -604,7 +604,7 @@
         document.addEventListener('mouseup', e => {
             document.querySelectorAll('.key.active, .black-key.active').forEach(releaseKeyWrapper);
         });
-   
+  
         document.addEventListener('touchstart', e => {
             if(e.target.closest('.key, .black-key')) e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -644,7 +644,7 @@
                 let dot = activeDots[i];
                 if (!dot.hit && !dot.missed && dot.note === playedNote) {
                     let timeDiff = Math.abs(gameTime - dot.targetTime);
-               
+              
                     if (timeDiff < 250 && timeDiff < minDiff) {
                         minDiff = timeDiff;
                         closestDot = dot;
@@ -653,7 +653,7 @@
             }
             if (closestDot) {
                 closestDot.hit = true;
-         
+        
                 if (minDiff <= 75) {
                     hits += 1; // P
                 } else if (minDiff <= 150) {
@@ -661,7 +661,7 @@
                 } else {
                     hits += 0.5; // O
                 }
-           
+          
                 updateScore();
                 lightUpKeyVisual(playedNote);
             }
@@ -671,7 +671,7 @@
             const accuracy = ((hits / totalNotes) * 100).toFixed(1);
             document.getElementById('score-display').innerText = `${accuracy}%`;
         }
-   
+  
         function loop(timestamp) {
             if (gameState !== 'playing') return;
             let deltaTime = timestamp - lastTime;
@@ -689,11 +689,11 @@
             let dotsRemaining = false;
             for (let i = activeDots.length - 1; i >= 0; i--) {
                 let dot = activeDots[i];
-           
+          
                 if (dot.hit || dot.missed) continue;
                 dotsRemaining = true;
                 let timeRemaining = dot.targetTime - gameTime;
-           
+          
                 // Spawn buffer
                 if (timeRemaining > fallSpeed) continue;
                 // Auto light-up key visual when ball hits the line
@@ -723,7 +723,7 @@
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
-           
+          
                 // Outer Glow
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = ballColor;
