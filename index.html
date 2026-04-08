@@ -55,6 +55,15 @@
             border: 2px solid var(--primary); outline: none; font-family: 'Nunito', sans-serif;
             font-weight: bold; cursor: pointer; font-size: 1rem;
         }
+        #sort-bar button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+        #sort-bar button.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 4px 15px rgba(0,210,255,0.6);
+        }
         /* Home Screen */
         #home-screen { padding: 20px; box-sizing: border-box; align-items: center; background: #12121e; overflow-y: auto; }
         .logo { font-size: 2.5rem; font-weight: 900; margin: 20px 0 10px 0; background: -webkit-linear-gradient(#00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center;}
@@ -127,6 +136,29 @@
         #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--darker); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 999; cursor: pointer; text-align: center; padding: 20px;}
 
         #countdown-text { font-size: 8rem; font-weight: 900; text-shadow: 0 0 30px var(--primary); }
+
+        /* Editor Screen Styles */
+        #editor-screen .editor-content {
+            padding: 20px; box-sizing: border-box; height: 100%; display: flex; flex-direction: column; background: #12121e;
+        }
+        #editor-piano-mini {
+            display: flex; flex: 1; height: 82px; background: #111; border-radius: 15px; position: relative; box-shadow: 0 4px 20px rgba(0,210,255,0.3);
+        }
+        #notes-list {
+            max-height: 420px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #00d2ff #2a2a40;
+        }
+        #notes-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        #notes-list::-webkit-scrollbar-thumb {
+            background: #00d2ff; border-radius: 20px;
+        }
+        .note-item {
+            background: #1e1e2f; border-radius: 12px; margin-bottom: 8px; padding: 14px 18px;
+            display: flex; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .note-item:active { transform: scale(0.97); }
     </style>
 </head>
 <body>
@@ -147,6 +179,10 @@
                 <option value="2">Legend (2x)</option>
             </select>
         </div>
+        <div id="sort-bar" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+            <button id="sort-default" onclick="setSortMode('default')">Default Songs</button>
+            <button id="sort-custom" onclick="setSortMode('custom')">My Custom Songs</button>
+        </div>
         <div class="grid" id="song-grid">
             </div>
     </div>
@@ -159,7 +195,7 @@
                 <div><span>Recent Score:</span> <span id="stat-recent" style="color: #60a5fa;">0%</span></div>
                 <div><span>Attempts:</span> <span id="stat-attempts">0</span></div>
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px;" id="preview-action-buttons">
                 <button class="secondary" onclick="showScreen('home-screen')">Back</button>
                 <button onclick="startGame()">Play Now</button>
             </div>
@@ -176,6 +212,56 @@
         </div>
         <div class="piano-container" id="game-piano"></div>
     </div>
+    <div id="editor-screen" class="screen">
+        <div class="editor-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 id="editor-title" style="font-size:2.4rem;margin:0;">Create New Song 🎉</h1>
+                <button onclick="cancelEditor()" class="secondary">Cancel</button>
+            </div>
+            <div style="flex: 1; overflow-y: auto;">
+                <label style="display:block;margin-bottom:5px;font-weight:700;">Song Name</label>
+                <input id="custom-name" type="text" placeholder="My Awesome Song" style="width:100%; padding:12px; font-size:1.3rem; border-radius:12px; background:#2a2a40; color:white; border:2px solid #00d2ff; margin-bottom:25px;">
+                
+                <label style="display:block;margin-bottom:8px;font-weight:700;">Background Fade Colors 🎨</label>
+                <div style="display:flex; gap:15px; margin-bottom:12px;">
+                    <div style="flex:1;">
+                        <small style="color:#aaa;display:block;margin-bottom:4px;">Top</small>
+                        <input id="top-color-picker" type="color" value="#10101a" style="width:100%; height:55px; border-radius:12px; border:none;">
+                    </div>
+                    <div style="flex:1;">
+                        <small style="color:#aaa;display:block;margin-bottom:4px;">Bottom</small>
+                        <input id="bottom-color-picker" type="color" value="#00d2ff" style="width:100%; height:55px; border-radius:12px; border:none;">
+                    </div>
+                </div>
+                <div id="gradient-preview" style="width:100%; height:70px; border-radius:15px; margin-bottom:8px; box-shadow:0 6px 20px rgba(0,210,255,0.4);"></div>
+                <p style="font-size:1rem; color:#aaa; text-align:center;margin:0 0 25px 0;">Your song background will fade automatically from top to bottom — super smooth &amp; fun!</p>
+                
+                <h2 style="margin:25px 0 12px 0;">Add Falling Notes (max 30 seconds) 🔥</h2>
+                <div style="background:#2a2a40; padding:20px; border-radius:15px; margin-bottom:25px;">
+                    <div style="display:flex; gap:15px; align-items:center; margin-bottom:15px;">
+                        <label style="white-space:nowrap; font-weight:700;">Choose note:</label>
+                        <div id="selected-note-display" style="font-size:2.4rem; font-weight:900; background:#1e1e2f; padding:4px 22px; border-radius:50px; box-shadow:0 0 20px #00d2ff; min-width:68px; text-align:center;">C4</div>
+                    </div>
+                    <div id="editor-piano-mini"></div>
+                    <div style="display:flex; gap:15px; align-items:end; margin-top:20px;">
+                        <div style="flex:1;">
+                            <label style="display:block;margin-bottom:5px;font-weight:700;">Time to fall (seconds)</label>
+                            <input id="note-time-input" type="number" step="0.1" min="0" max="30" value="1.0" style="width:100%; padding:12px; font-size:1.3rem; border-radius:12px; background:#1e1e2f; color:white; border:2px solid #00d2ff;">
+                        </div>
+                        <button onclick="addNoteToCustom()" style="padding:15px 35px; font-size:1.2rem; box-shadow:0 0 20px #00d2ff;">+ Add Note</button>
+                    </div>
+                </div>
+                
+                <h2 style="margin-bottom:10px;">Notes in your song <span id="note-count" style="font-size:1rem;color:#00d2ff;">(0 notes)</span></h2>
+                <div id="notes-list"></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:25px;">
+                <button onclick="deleteCurrentCustom()" class="danger" id="delete-btn" style="display:none;">🗑️ Delete Song</button>
+                <button onclick="saveCustomSong(false)" style="flex:1;">💾 Save Song</button>
+                <button onclick="saveCustomSong(true)" style="flex:1;">🎮 Test Play Now</button>
+            </div>
+        </div>
+    </div>
     <div id="countdown-overlay" class="overlay">
         <div id="countdown-text">3</div>
     </div>
@@ -191,7 +277,7 @@
         <button class="secondary" onclick="showScreen('home-screen')">Main Menu</button>
     </div>
     <!-- Credit footer - bottom middle, low opacity -->
-    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik v1.2.1</div>
+    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik v1.3</div>
     <script>
         // --- DATA & CONFIG ---
         let speedMultiplier = 1.0;
@@ -208,7 +294,6 @@
             'B4': '#f012be',
             'C5': '#39cccc'
         };
-        // Added cardColor for the dynamic background feature!
         const songDB = {
             freePlay: {
                 title: "Free Play", cardColor: "#2a2a40", color: "linear-gradient(180deg, #10101a 0%, #2a2a40 100%)",
@@ -238,7 +323,6 @@
                 title: "Hot Cross Buns", cardColor: "#1b4332", color: "linear-gradient(180deg, #0f2027 0%, #203a43 100%)",
                 notes: ['E4','D4','C4','-','E4','D4','C4','-','C4','C4','C4','C4','-','D4','D4','D4','D4','-','E4','D4','C4']
             },
-            // --- NEW MEDIUM SONGS (Yellow) ---
             happyBirthday: {
                 title: "Happy Birthday", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #b8860b 0%, #daa520 100%)",
                 notes: ['G4','G4','A4','-','G4','-','C5','-','B4','-','-','G4','G4','A4','-','G4','-','D4','-','C4','-','-','E4','E4','E4','-','C4','-','B4','-','A4']
@@ -271,7 +355,6 @@
                 title: "Star Wars", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #07608C 0%, #2BE1FF 100%)",
                 notes: ['C4','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','F4','D4','-','G4','G4','A4','A4','F4','E4','D4','C4','-','G4','D4']
             },
-            // --- NEW MEDIUM SONGS (Yellow) - Jurassic Park & Tek It ---
             jurassicPark: {
                 title: "Jurassic Park",
                 cardColor: "#5c4a0a",
@@ -290,7 +373,6 @@
                 color: "linear-gradient(180deg, #00FFAD 0%, #047851 100%)",
                 notes: ['A4','C4','D4','D4','D4','E4','F4','F4','F4','G4','E4','E4','D4','C4','C4','D4','-','A4','C4','D4','D4','D4','E4','F4','F4','F4','G4','E4','E4','D4','C4','D4','-','D4','F4','G4','G4','-', 'G4','A4','B4','B4','-','A4','G4', 'A4','D4']
             },
-            // --- NEW HARD SONGS (Red) ---
             furElise: {
                 title: "Für Elise", cardColor: "#521616", color: "linear-gradient(180deg, #4a0e0e 0%, #8b0000 100%)",
                 notes: ['E4','D#4','E4','D#4','E4','B4','D4','C5','A4','-','-','C4','E4','A4','B4','-','-','E4','G#4','B4','C5','-','-','E4','E4','D#4','E4','D#4','E4','B4','D4','C5','A4']
@@ -308,6 +390,13 @@
                 notes: ['E4','D4','C4','B4','A4','G4','A4','B4','E4','D4','C4','B4','A4','G4','A4','B4','C5','B4','A4','G4','F4','E4','F4','G4','C5','B4','A4','G4','F4','E4']
             }
         };
+        let customSongs = [];
+        let currentSortMode = 'default';
+        let currentSongKey = null;
+        let currentCustomId = null;
+        let currentEditingCustom = null;
+        let tempCustomNotes = [];
+        let selectedEditorNote = 'C4';
         const pianoHTML = `
             <div class="key" data-note="C4">C</div><div class="key" data-note="D4">D</div>
             <div class="key" data-note="E4">E</div><div class="key" data-note="F4">F</div>
@@ -329,69 +418,49 @@
             'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25
         };
         function initAudio() {
-            if (audioCtx) return; // already created
+            if (audioCtx) return;
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                console.log('🎵 AudioContext created → state:', audioCtx.state);
-                // Classic silent buffer unlock (required on iOS)
                 const buffer = audioCtx.createBuffer(1, 1, 22050);
                 const source = audioCtx.createBufferSource();
                 source.buffer = buffer;
                 source.connect(audioCtx.destination);
                 source.start(0);
-                console.log('🔇 Silent buffer played');
                 if (audioCtx.state === 'suspended') {
-                    audioCtx.resume().then(() => {
-                        console.log('✅ AudioContext resumed successfully! State is now:', audioCtx.state);
-                    }).catch(err => console.error('❌ Resume failed:', err));
+                    audioCtx.resume();
                 }
-            } catch (e) {
-                console.error('❌ Could not create AudioContext:', e);
-            }
+            } catch (e) {}
         }
         function playSound(note) {
-            if (!audioCtx || !frequencies[note]) {
-                console.warn('⚠️ playSound skipped - no ctx or bad note');
-                return;
-            }
-            console.log(`🎹 playSound called for ${note} → current state: ${audioCtx.state}`);
+            if (!audioCtx || !frequencies[note]) return;
             const playNote = () => {
                 try {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(frequencies[note], audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime); // easy-to-hear volume
+                    gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 1.0);
-                    console.log(`✅ OSCILLATOR STARTED for ${note} — you should hear sound!`);
-                } catch (err) {
-                    console.error('❌ Oscillator error:', err);
-                }
+                } catch (err) {}
             };
             if (audioCtx.state === 'suspended') {
-                console.log('⏳ Context suspended → calling resume() now...');
-                audioCtx.resume().then(() => {
-                    console.log('✅ Resume succeeded — playing note');
-                    playNote();
-                }).catch(err => {
-                    console.error('❌ Resume promise failed:', err);
-                });
+                audioCtx.resume().then(playNote);
             } else {
                 playNote();
             }
         }
         // --- STATE VARIABLES ---
-        let currentSongKey = null;
         let activeDots = [];
         let gameTime = 0, lastTime = 0;
         let animationFrame;
         let gameState = 'menu';
         let totalNotes = 0, hits = 0;
         let gameStartTime = 0, pausedTime = 0, startPauseStamp = 0;
+        let isCurrentTestPlay = false;
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() {
@@ -409,30 +478,49 @@
             'B4': 13/16,
             'C5': 15/16
         };
-        // --- UI & CUSTOM THUMBNAIL GENERATOR ---
+        function loadCustomSongs() {
+            const saved = localStorage.getItem('pianoCustomSongs');
+            customSongs = saved ? JSON.parse(saved) : [];
+            if (customSongs.length > 100) customSongs = customSongs.slice(0, 100);
+        }
+        function getCustomStats(id) {
+            let stats = JSON.parse(localStorage.getItem('piano_custom_' + id));
+            return stats || { best: 0, recent: 0, attempts: 0 };
+        }
+        function saveCustomStats(id, accuracy) {
+            let stats = getCustomStats(id);
+            stats.attempts++;
+            stats.recent = accuracy;
+            if (accuracy > stats.best) stats.best = accuracy;
+            localStorage.setItem('piano_custom_' + id, JSON.stringify(stats));
+        }
         function changeDifficulty(value) {
             speedMultiplier = parseFloat(value);
             fallSpeed = 2625 / speedMultiplier;
             beatSpeed = 450 / speedMultiplier;
-            buildHomeGrid(); // Update times displayed on cards
+            buildHomeGrid();
             if (currentSongKey && document.getElementById('preview-screen').classList.contains('active')) {
                 openPreview(currentSongKey);
             }
         }
         function generateThumbnailHTML(data) {
-            let html = `<div class="thumb-container" style="background: ${data.color}">`;
-      
-            // Add custom colorful dots representing the song!
-            if (data.notes.length > 0) {
-                let sampleNotes = data.notes.filter(n => n !== '-').slice(0, 3);
+            let sampleNotes = [];
+            if (data.notes && Array.isArray(data.notes) && data.notes.length > 0) {
+                if (typeof data.notes[0] === 'string') {
+                    sampleNotes = data.notes.filter(n => n !== '-').slice(0, 3);
+                } else {
+                    sampleNotes = data.notes.slice(0, 3).map(item => item.note);
+                }
+            }
+            let html = `<div class="thumb-container" style="background: ${data.color || data.cardColor || '#2a2a40'}">`;
+            if (sampleNotes.length > 0) {
                 sampleNotes.forEach((n, i) => {
-                    let left = notePositions[n] * 100 + "%";
+                    let left = (notePositions[n] || 0.5) * 100 + "%";
                     let bottom = (35 + i * 20) + "%";
                     let color = noteColors[n] || '#fff';
                     html += `<div class="thumb-ball" style="left: ${left}; bottom: ${bottom}; background: ${color}; box-shadow: 0 0 10px ${color};"></div>`;
                 });
             }
-            // Draw the tiny piano directly via CSS
             html += `<div class="thumb-piano">`;
             for(let i=0; i<8; i++) html += `<div class="thumb-white"></div>`;
             html += `<div class="thumb-black" style="left: 12.5%;"></div>
@@ -449,19 +537,62 @@
             document.getElementById(screenId).classList.add('active');
             if(screenId === 'home-screen') buildHomeGrid();
         }
+        function setSortMode(mode) {
+            currentSortMode = mode;
+            const defaultBtn = document.getElementById('sort-default');
+            const customBtn = document.getElementById('sort-custom');
+            if (defaultBtn) defaultBtn.classList.toggle('active', mode === 'default');
+            if (customBtn) customBtn.classList.toggle('active', mode === 'custom');
+            buildHomeGrid();
+        }
         function buildHomeGrid() {
             const grid = document.getElementById('song-grid');
             grid.innerHTML = '';
-            for (const [key, data] of Object.entries(songDB)) {
-                let lengthStr = data.notes.length === 0 ? "Endless Fun" : formatTime(((data.notes.length * beatSpeed) + fallSpeed) / 1000);
-                const card = document.createElement('div');
-                card.className = 'card';
-                // Dynamically apply background color representing difficulty!
-                card.style.background = data.cardColor;
-          
-                card.innerHTML = `${generateThumbnailHTML(data)}<h3>${data.title}</h3><p>${lengthStr}</p>`;
-                card.onclick = () => openPreview(key);
-                grid.appendChild(card);
+            const defaultBtn = document.getElementById('sort-default');
+            const customBtn = document.getElementById('sort-custom');
+            if (defaultBtn && customBtn) {
+                defaultBtn.classList.toggle('active', currentSortMode === 'default');
+                customBtn.classList.toggle('active', currentSortMode === 'custom');
+            }
+            if (currentSortMode === 'default') {
+                for (const [key, data] of Object.entries(songDB)) {
+                    let lengthStr = data.notes.length === 0 ? "Endless Fun" : formatTime(((data.notes.length * beatSpeed) + fallSpeed) / 1000);
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.background = data.cardColor;
+                    card.innerHTML = `${generateThumbnailHTML(data)}<h3>${data.title}</h3><p>${lengthStr}</p>`;
+                    card.onclick = () => openPreview(key);
+                    grid.appendChild(card);
+                }
+            } else {
+                const freeData = songDB.freePlay;
+                let lengthStr = "Endless Fun";
+                const freeCard = document.createElement('div');
+                freeCard.className = 'card';
+                freeCard.style.background = freeData.cardColor;
+                freeCard.innerHTML = `${generateThumbnailHTML(freeData)}<h3>${freeData.title}</h3><p>${lengthStr}</p>`;
+                freeCard.onclick = () => openPreview('freePlay');
+                grid.appendChild(freeCard);
+                customSongs.forEach(custom => {
+                    let maxT = 30;
+                    if (custom.notes && custom.notes.length > 0) {
+                        maxT = Math.max(...custom.notes.map(n => n.time));
+                    }
+                    let lengthStrCustom = formatTime(maxT);
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.background = custom.cardColor || '#2a2a40';
+                    card.innerHTML = `${generateThumbnailHTML(custom)}<h3>${custom.title}</h3><p>${lengthStrCustom}</p>`;
+                    card.onclick = () => openPreviewCustom(custom.id);
+                    grid.appendChild(card);
+                });
+                const createCard = document.createElement('div');
+                createCard.className = 'card';
+                createCard.style.background = '#2a2a40';
+                createCard.style.border = '3px dashed #00d2ff';
+                createCard.innerHTML = `<div style="height:90px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;color:#00d2ff;line-height:1;">+</div><h3>Create New Song</h3><p>Up to 30s of fun!</p>`;
+                createCard.onclick = () => startCreateNewSong();
+                grid.appendChild(createCard);
             }
         }
         function formatTime(seconds) {
@@ -480,47 +611,270 @@
             if (accuracy > stats.best) stats.best = accuracy;
             localStorage.setItem('piano_' + key, JSON.stringify(stats));
         }
+        function resetPreviewButtons() {
+            const btnContainer = document.getElementById('preview-action-buttons');
+            if (btnContainer) {
+                btnContainer.innerHTML = `<button class="secondary" onclick="showScreen('home-screen')">Back</button><button onclick="startGame()">Play Now</button>`;
+            }
+        }
         function openPreview(key) {
             currentSongKey = key;
+            currentCustomId = null;
             const data = songDB[key];
             if (key === 'freePlay') {
                 startGame();
                 return;
             }
-      
             document.getElementById('preview-screen').style.background = data.color;
             document.getElementById('preview-title').innerText = data.title;
             document.getElementById('preview-length').innerText = "Length: " + formatTime(((data.notes.length * beatSpeed) + fallSpeed) / 1000);
-      
             const stats = getStats(key);
             document.getElementById('stat-best').innerText = stats.best + "%";
             document.getElementById('stat-recent').innerText = stats.recent + "%";
             document.getElementById('stat-attempts').innerText = stats.attempts;
-      
             showScreen('preview-screen');
+            resetPreviewButtons();
+        }
+        function openPreviewCustom(id) {
+            currentCustomId = id;
+            currentSongKey = null;
+            const custom = customSongs.find(c => c.id === id);
+            if (!custom) return;
+            document.getElementById('preview-screen').style.background = custom.color;
+            document.getElementById('preview-title').innerText = custom.title;
+            let maxT = 30;
+            if (custom.notes && custom.notes.length > 0) {
+                maxT = Math.max(...custom.notes.map(n => n.time));
+            }
+            document.getElementById('preview-length').innerText = "Length: " + formatTime(maxT);
+            const stats = getCustomStats(id);
+            document.getElementById('stat-best').innerText = stats.best + "%";
+            document.getElementById('stat-recent').innerText = stats.recent + "%";
+            document.getElementById('stat-attempts').innerText = stats.attempts;
+            showScreen('preview-screen');
+            const actionBtns = document.getElementById('preview-action-buttons');
+            actionBtns.innerHTML = `
+                <button class="secondary" onclick="showScreen('home-screen')">Back</button>
+                <button onclick="startGame()">Play Now</button>
+                <button onclick="editCustomFromPreview()" class="secondary">Edit Song</button>
+                <button onclick="deleteCustomFromPreview()" class="danger">Delete Song</button>
+            `;
+        }
+        function updateGradientPreview() {
+            const top = document.getElementById('top-color-picker').value;
+            const bot = document.getElementById('bottom-color-picker').value;
+            const preview = document.getElementById('gradient-preview');
+            preview.style.background = `linear-gradient(180deg, ${top} 0%, ${bot} 100%)`;
+        }
+        function startCreateNewSong() {
+            if (customSongs.length >= 100) {
+                alert("You've reached the maximum of 100 custom songs! Delete some to make room.");
+                return;
+            }
+            currentEditingCustom = null;
+            tempCustomNotes = [];
+            document.getElementById('editor-title').innerText = 'Create New Song 🎉';
+            document.getElementById('custom-name').value = 'My Custom Tune';
+            document.getElementById('top-color-picker').value = '#10101a';
+            document.getElementById('bottom-color-picker').value = '#00d2ff';
+            document.getElementById('delete-btn').style.display = 'none';
+            updateGradientPreview();
+            document.getElementById('top-color-picker').oninput = updateGradientPreview;
+            document.getElementById('bottom-color-picker').oninput = updateGradientPreview;
+            renderEditorPianoMini();
+            renderNotesList();
+            showScreen('editor-screen');
+        }
+        function renderEditorPianoMini() {
+            const container = document.getElementById('editor-piano-mini');
+            container.innerHTML = pianoHTML;
+            const keys = container.querySelectorAll('.key, .black-key');
+            keys.forEach(k => {
+                k.style.cursor = 'pointer';
+                k.style.fontSize = '13px';
+                k.style.paddingBottom = '6px';
+                k.addEventListener('click', () => {
+                    selectedEditorNote = k.dataset.note;
+                    keys.forEach(kk => kk.classList.remove('active'));
+                    k.classList.add('active');
+                    playSound(selectedEditorNote);
+                    document.getElementById('selected-note-display').innerText = selectedEditorNote;
+                });
+                k.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    selectedEditorNote = k.dataset.note;
+                    keys.forEach(kk => kk.classList.remove('active'));
+                    k.classList.add('active');
+                    playSound(selectedEditorNote);
+                    document.getElementById('selected-note-display').innerText = selectedEditorNote;
+                });
+            });
+            const defaultKey = Array.from(keys).find(k => k.dataset.note === 'C4');
+            if (defaultKey) defaultKey.classList.add('active');
+            document.getElementById('selected-note-display').innerText = 'C4';
+        }
+        function addNoteToCustom() {
+            const timeInput = parseFloat(document.getElementById('note-time-input').value);
+            if (isNaN(timeInput) || timeInput < 0 || timeInput > 30) {
+                alert('Time must be between 0 and 30 seconds!');
+                return;
+            }
+            if (!selectedEditorNote) return;
+            tempCustomNotes.push({time: timeInput, note: selectedEditorNote});
+            tempCustomNotes.sort((a,b) => a.time - b.time);
+            renderNotesList();
+            document.getElementById('note-time-input').value = (timeInput + 0.5).toFixed(1);
+        }
+        function renderNotesList() {
+            const listEl = document.getElementById('notes-list');
+            listEl.innerHTML = '';
+            if (tempCustomNotes.length === 0) {
+                listEl.innerHTML = `<p style="text-align:center; color:#aaa; padding:80px 0; font-size:1.1rem;">No notes yet!<br>Tap the piano above and hit + Add Note to start the party 🎵</p>`;
+                document.getElementById('note-count').innerText = '(0 notes)';
+                return;
+            }
+            tempCustomNotes.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'note-item';
+                const dotColor = noteColors[item.note] || '#fff';
+                div.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:12px;flex:1;">
+                        <div style="width:26px;height:26px;border-radius:50%;background:${dotColor};box-shadow:0 0 12px ${dotColor};"></div>
+                        <span style="font-size:1.3rem;"><strong>${item.time.toFixed(1)}s</strong> — ${item.note}</span>
+                    </div>
+                    <button onclick="deleteTempNote(${idx});event.stopImmediatePropagation();" style="background:#ff416c;color:white;border:none;border-radius:50%;width:36px;height:36px;font-size:24px;line-height:30px;cursor:pointer;">×</button>
+                `;
+                listEl.appendChild(div);
+            });
+            document.getElementById('note-count').innerText = `(${tempCustomNotes.length} notes)`;
+        }
+        function deleteTempNote(idx) {
+            tempCustomNotes.splice(idx, 1);
+            renderNotesList();
+        }
+        function saveCustomSong(isTest) {
+            const name = document.getElementById('custom-name').value.trim() || 'Untitled Song';
+            const topColor = document.getElementById('top-color-picker').value;
+            const bottomColor = document.getElementById('bottom-color-picker').value;
+            const gradient = `linear-gradient(180deg, ${topColor} 0%, ${bottomColor} 100%)`;
+            const newCustom = {
+                id: currentEditingCustom ? currentEditingCustom.id : `custom-${Date.now()}`,
+                title: name,
+                color: gradient,
+                cardColor: bottomColor,
+                notes: [...tempCustomNotes],
+                maxTime: tempCustomNotes.length ? Math.max(...tempCustomNotes.map(n => n.time)) + 2 : 30
+            };
+            if (currentEditingCustom) {
+                const index = customSongs.findIndex(c => c.id === currentEditingCustom.id);
+                if (index > -1) customSongs[index] = newCustom;
+            } else {
+                customSongs.push(newCustom);
+            }
+            localStorage.setItem('pianoCustomSongs', JSON.stringify(customSongs));
+            if (isTest) {
+                currentCustomId = newCustom.id;
+                currentEditingCustom = null;
+                tempCustomNotes = [];
+                startGame();
+            } else {
+                currentEditingCustom = null;
+                tempCustomNotes = [];
+                showScreen('home-screen');
+                if (currentSortMode === 'custom') buildHomeGrid();
+            }
+        }
+        function editCustomFromPreview() {
+            if (currentCustomId) editCustomSong(currentCustomId);
+        }
+        function deleteCustomFromPreview() {
+            if (currentCustomId) {
+                deleteCustomSong(currentCustomId);
+            }
+        }
+        function editCustomSong(id) {
+            const custom = customSongs.find(c => c.id === id);
+            if (!custom) return;
+            currentEditingCustom = custom;
+            tempCustomNotes = custom.notes ? [...custom.notes] : [];
+            document.getElementById('editor-title').innerText = `Edit "${custom.title}" 🎸`;
+            document.getElementById('custom-name').value = custom.title;
+            document.getElementById('top-color-picker').value = '#10101a';
+            document.getElementById('bottom-color-picker').value = custom.cardColor || '#00d2ff';
+            document.getElementById('delete-btn').style.display = 'block';
+            updateGradientPreview();
+            document.getElementById('top-color-picker').oninput = updateGradientPreview;
+            document.getElementById('bottom-color-picker').oninput = updateGradientPreview;
+            renderEditorPianoMini();
+            renderNotesList();
+            showScreen('editor-screen');
+        }
+        function deleteCustomSong(id) {
+            if (confirm('Delete this custom song forever?')) {
+                customSongs = customSongs.filter(c => c.id !== id);
+                localStorage.setItem('pianoCustomSongs', JSON.stringify(customSongs));
+                if (currentSortMode === 'custom') buildHomeGrid();
+                showScreen('home-screen');
+            }
+        }
+        function deleteCurrentCustom() {
+            if (!currentEditingCustom) return;
+            if (confirm(`Delete "${currentEditingCustom.title}" forever?`)) {
+                customSongs = customSongs.filter(c => c.id !== currentEditingCustom.id);
+                localStorage.setItem('pianoCustomSongs', JSON.stringify(customSongs));
+                currentEditingCustom = null;
+                tempCustomNotes = [];
+                showScreen('home-screen');
+                if (currentSortMode === 'custom') buildHomeGrid();
+            }
+        }
+        function cancelEditor() {
+            currentEditingCustom = null;
+            tempCustomNotes = [];
+            showScreen('home-screen');
         }
         // --- GAME CONTROLS ---
         function startGame() {
             initAudio();
-            const data = songDB[currentSongKey];
+            let data = null;
+            let isCustom = false;
+            let isTestPlay = false;
+            if (currentCustomId === 'temp-test') {
+                data = tempTestData;
+                isCustom = true;
+                isTestPlay = true;
+            } else if (currentCustomId) {
+                data = customSongs.find(c => c.id === currentCustomId);
+                isCustom = true;
+            } else {
+                data = songDB[currentSongKey];
+            }
+            if (!data) return;
             document.getElementById('game-area').style.background = data.color;
-            document.getElementById('score-display').innerText = currentSongKey === 'freePlay' ? "Free Play" : "0%";
-            document.getElementById('score-display').style.display = currentSongKey === 'freePlay' ? 'none' : 'block';
-      
+            const isFreePlay = currentSongKey === 'freePlay';
+            document.getElementById('score-display').innerText = isFreePlay ? "Free Play" : "0%";
+            document.getElementById('score-display').style.display = isFreePlay ? 'none' : 'block';
             showScreen('game-screen');
-      
             resizeCanvas();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
             activeDots = []; totalNotes = 0; hits = 0; gameTime = 0; pausedTime = 0;
-      
-            if (currentSongKey !== 'freePlay') {
-                data.notes.forEach((note, index) => {
-                    if (note !== '-') {
-                        activeDots.push({ note: note, targetTime: (index * beatSpeed) + fallSpeed, hit: false, missed: false });
+            isCurrentTestPlay = isTestPlay;
+            if (!isFreePlay) {
+                if (isCustom) {
+                    data.notes.forEach((item) => {
+                        const targetTimeMs = (item.time * 1000) + fallSpeed;
+                        activeDots.push({ note: item.note, targetTime: targetTimeMs, hit: false, missed: false });
                         totalNotes++;
-                    }
-                });
+                    });
+                } else {
+                    data.notes.forEach((note, index) => {
+                        if (note !== '-') {
+                            activeDots.push({ note: note, targetTime: (index * beatSpeed) + fallSpeed, hit: false, missed: false });
+                            totalNotes++;
+                        }
+                    });
+                }
+                activeDots.sort((a,b) => a.targetTime - b.targetTime);
                 startCountdown();
             } else {
                 gameState = 'playing';
@@ -535,10 +889,8 @@
             const overlay = document.getElementById('countdown-overlay');
             const text = document.getElementById('countdown-text');
             overlay.classList.add('active');
-      
             let count = 3;
             text.innerText = count;
-      
             const interval = setInterval(() => {
                 count--;
                 if (count > 0) {
@@ -578,17 +930,30 @@
             gameState = 'menu';
             const accuracy = totalNotes > 0 ? parseFloat(((hits / totalNotes) * 100).toFixed(1)) : 0;
             const timePlayed = formatTime(gameTime / 1000);
-      
-            saveStats(currentSongKey, accuracy);
-      
+            if (currentCustomId && currentCustomId !== 'temp-test') {
+                saveCustomStats(currentCustomId, accuracy);
+            } else if (currentSongKey && currentSongKey !== 'freePlay') {
+                saveStats(currentSongKey, accuracy);
+            }
             document.getElementById('end-title').innerText = accuracy > 80 ? "Awesome!" : "Good Try!";
             document.getElementById('end-stats').innerText = `Accuracy: ${accuracy}% | Time: ${timePlayed}`;
             document.getElementById('end-overlay').classList.add('active');
+            if (isCurrentTestPlay) {
+                const buttons = document.getElementById('end-overlay').querySelectorAll('button');
+                buttons.forEach(btn => {
+                    if (btn.textContent === 'Main Menu') {
+                        btn.onclick = () => {
+                            document.getElementById('end-overlay').classList.remove('active');
+                            isCurrentTestPlay = false;
+                            currentCustomId = null;
+                            showScreen('editor-screen');
+                        };
+                    }
+                });
+            }
         }
-  
         function pressKeyWrapper(element) {
-            initAudio(); // Resume audio on any press to be safe
-            console.log('🔑 Key pressed → note:', element.dataset.note);
+            initAudio();
             const note = element.dataset.note;
             element.classList.add('active');
             playSound(note);
@@ -604,7 +969,6 @@
         document.addEventListener('mouseup', e => {
             document.querySelectorAll('.key.active, .black-key.active').forEach(releaseKeyWrapper);
         });
-  
         document.addEventListener('touchstart', e => {
             if(e.target.closest('.key, .black-key')) e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -644,7 +1008,6 @@
                 let dot = activeDots[i];
                 if (!dot.hit && !dot.missed && dot.note === playedNote) {
                     let timeDiff = Math.abs(gameTime - dot.targetTime);
-              
                     if (timeDiff < 250 && timeDiff < minDiff) {
                         minDiff = timeDiff;
                         closestDot = dot;
@@ -653,15 +1016,13 @@
             }
             if (closestDot) {
                 closestDot.hit = true;
-        
                 if (minDiff <= 75) {
-                    hits += 1; // P
+                    hits += 1;
                 } else if (minDiff <= 150) {
-                    hits += 0.8; // G
+                    hits += 0.8;
                 } else {
-                    hits += 0.5; // O
+                    hits += 0.5;
                 }
-          
                 updateScore();
                 lightUpKeyVisual(playedNote);
             }
@@ -671,7 +1032,6 @@
             const accuracy = ((hits / totalNotes) * 100).toFixed(1);
             document.getElementById('score-display').innerText = `${accuracy}%`;
         }
-  
         function loop(timestamp) {
             if (gameState !== 'playing') return;
             let deltaTime = timestamp - lastTime;
@@ -682,21 +1042,16 @@
                 animationFrame = requestAnimationFrame(loop);
                 return;
             }
-            // D
             const targetY = canvas.height - 20;
             ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.fillRect(0, targetY, canvas.width, 5);
             let dotsRemaining = false;
             for (let i = activeDots.length - 1; i >= 0; i--) {
                 let dot = activeDots[i];
-          
                 if (dot.hit || dot.missed) continue;
                 dotsRemaining = true;
                 let timeRemaining = dot.targetTime - gameTime;
-          
-                // Spawn buffer
                 if (timeRemaining > fallSpeed) continue;
-                // Auto light-up key visual when ball hits the line
                 if (timeRemaining < 0 && timeRemaining > -50 && !dot.flashed) {
                     dot.flashed = true;
                     lightUpKeyVisual(dot.note);
@@ -708,14 +1063,12 @@
                 let y = canvas.height - (timeRemaining / fallSpeed) * canvas.height;
                 let x = canvas.width * notePositions[dot.note];
                 let ballColor = noteColors[dot.note] || '#00d2ff';
-                // Comet Trail
                 ctx.beginPath();
                 let grad = ctx.createLinearGradient(x, y, x, y - 60);
                 grad.addColorStop(0, ballColor);
                 grad.addColorStop(1, 'transparent');
                 ctx.fillStyle = grad;
                 ctx.fillRect(x - 15, y - 60, 30, 60);
-                // Colorful Dot
                 ctx.beginPath();
                 ctx.arc(x, y - 10, 18, 0, Math.PI * 2);
                 ctx.fillStyle = ballColor;
@@ -723,23 +1076,21 @@
                 ctx.lineWidth = 4;
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
-          
-                // Outer Glow
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = ballColor;
                 ctx.fill();
                 ctx.shadowBlur = 0;
             }
-            if (!dotsRemaining && gameTime > activeDots[activeDots.length - 1].targetTime + 1000) {
+            if (!dotsRemaining && activeDots.length > 0 && gameTime > activeDots[activeDots.length - 1].targetTime + 1000) {
                 endGame();
             } else {
                 animationFrame = requestAnimationFrame(loop);
             }
         }
-        // I
         document.getElementById('start-overlay').addEventListener('click', function() {
             initAudio();
             this.style.display = 'none';
+            loadCustomSongs();
             showScreen('home-screen');
         });
     </script>
