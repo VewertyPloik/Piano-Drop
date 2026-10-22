@@ -19,23 +19,16 @@
             overflow: hidden; touch-action: none; user-select: none;
             color: var(--text-light);
         }
-        /* Screen Management */
-        .screen {
-            display: none; width: 100%; height: 100%; position: absolute;
-            top: 0; left: 0; flex-direction: column;
-        }
+        .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; }
         .screen.active { display: flex; }
-        /* Overlays */
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); display: none; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
         }
         .overlay.active { display: flex; }
-  
         .overlay h1 { font-size: 3rem; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
         .overlay p { font-size: 1.2rem; margin-bottom: 20px; color: #ccc; text-align: center; }
-        /* Buttons & Selects */
         button {
             padding: 15px 30px; font-size: 18px; font-family: 'Nunito', sans-serif;
             border: none; border-radius: 30px; outline: none; font-weight: 900;
@@ -55,16 +48,11 @@
             border: 2px solid var(--primary); outline: none; font-family: 'Nunito', sans-serif;
             font-weight: bold; cursor: pointer; font-size: 1rem;
         }
-        #sort-bar button {
-            padding: 12px 25px;
-            font-size: 1.1rem;
-            transition: all 0.2s;
-        }
+        #sort-bar button { padding: 12px 25px; font-size: 1.1rem; transition: all 0.2s; }
         #sort-bar button.active {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             box-shadow: 0 4px 15px rgba(0,210,255,0.6);
         }
-        /* Home Screen */
         #home-screen { padding: 20px; box-sizing: border-box; align-items: center; background: #12121e; overflow-y: auto; }
         .logo { font-size: 2.5rem; font-weight: 900; margin: 20px 0 10px 0; background: -webkit-linear-gradient(#00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center;}
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 600px; padding-bottom: 30px;}
@@ -76,7 +64,6 @@
         .card:active { transform: scale(0.95); }
         .card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
         .card p { margin: 0; font-size: 0.8rem; color: #dcdcdc; font-weight: bold; }
-        /* Custom Thumbnail Generator CSS */
         .thumb-container {
             width: 100%; height: 90px; border-radius: 10px; position: relative; overflow: hidden;
             border: 2px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: flex-end;
@@ -88,7 +75,6 @@
         .thumb-white:last-child { border-right: none; }
         .thumb-black { position: absolute; width: 8%; height: 60%; background: linear-gradient(to bottom, #333, #000); top: 0; transform: translateX(-50%); border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
         .thumb-ball { position: absolute; width: 14px; height: 14px; border-radius: 50%; z-index: 2; transform: translateX(-50%); border: 2px solid rgba(255,255,255,0.8); }
-        /* Preview Screen */
         #preview-screen { transition: background 0.5s ease; }
         .preview-content {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -96,17 +82,14 @@
         }
         .stats-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; margin: 20px 0; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .stats-box div { display: flex; justify-content: space-between; margin: 10px 0; font-size: 1.1rem; font-weight: bold;}
-        /* Game Area */
         #game-area { flex-grow: 1; position: relative; width: 100%; }
         #game-canvas { display: block; width: 100%; height: 100%; }
-  
         #top-bar {
             position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; box-sizing: border-box;
             display: flex; justify-content: space-between; align-items: center; z-index: 10;
         }
         #top-bar button { padding: 8px 15px; font-size: 16px; margin: 0; border-radius: 10px; }
         #score-display { font-size: 1.5rem; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        /* Piano */
         .piano-container { height: 35%; min-height: 180px; display: flex; position: relative; background: #111; border-top: 5px solid #000; box-shadow: 0 -10px 20px rgba(0,0,0,0.5); z-index: 20; }
         .key {
             flex: 1; box-sizing: border-box; border: 1px solid #ccc; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
@@ -115,8 +98,6 @@
             color: #666; font-weight: bold; transition: background 0.1s;
         }
         .key.active { background: linear-gradient(to bottom, #ddd 0%, #ccc 100%); box-shadow: inset 0 2px 6px rgba(0,0,0,0.4); color: var(--primary); }
-  
-        /* Dynamic Hit Lighting Effects */
         .key.ball-hit {
             background: #fff;
             box-shadow: inset 0 0 25px var(--hit-color, #00d2ff), 0 -5px 25px var(--hit-color, #00d2ff);
@@ -127,32 +108,55 @@
             border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.6); transform: translateX(-50%);
         }
         .black-key.active { background: linear-gradient(to bottom, #111 0%, #000 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
-  
         .black-key.ball-hit {
             background: #444;
             box-shadow: inset 0 0 15px var(--hit-color, #00d2ff), 0 0 20px var(--hit-color, #00d2ff);
             border-bottom: 2px solid var(--hit-color, #00d2ff);
         }
-        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--darker); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 999; cursor: pointer; text-align: center; padding: 20px;}
+
+        #start-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--darker); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 999; text-align: center; padding: 20px; box-sizing: border-box; overflow-y: auto;}
+        #start-overlay h1 { margin: 0 0 8px 0; font-size: 2.4rem; text-shadow: 0 0 25px rgba(0,210,255,0.5); }
+        #start-overlay .subtitle { font-size: 1rem; color: #aaa; font-weight: normal; margin: 0 0 25px 0; }
+        #play-button { font-size: 26px; padding: 18px 60px; margin: 0 0 30px 0; animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0,210,255,0.4); }
+            50% { transform: scale(1.06); box-shadow: 0 4px 30px rgba(0,210,255,0.8); }
+        }
+        .changelog {
+            max-width: 540px; width: 100%; background: rgba(255,255,255,0.05);
+            border-radius: 15px; padding: 18px 22px; text-align: left;
+            max-height: 42vh; overflow-y: auto; font-weight: normal; font-size: 14px;
+            border: 1px solid rgba(0,210,255,0.2);
+            scrollbar-width: thin; scrollbar-color: #00d2ff #2a2a40;
+        }
+        .changelog::-webkit-scrollbar { width: 8px; }
+        .changelog::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 20px; }
+        .changelog h2 { font-size: 1.1rem; margin: 0 0 14px 0; text-align: center; color: var(--primary); font-weight: 900; }
+        .changelog h2 .date { font-size: 0.8rem; color: #8DBBCC; font-weight: 700; }
+        .changelog-section { margin-bottom: 14px; }
+        .changelog-section:last-child { margin-bottom: 0; }
+        .changelog-section h3 { font-size: 0.95rem; margin: 0 0 6px 0; color: #00d2ff; font-weight: 900; }
+        .changelog ul { list-style: none; padding-left: 0; margin: 0; }
+        .changelog li { margin: 5px 0; color: #d5d5dd; padding-left: 18px; position: relative; line-height: 1.4; }
+        .changelog li:before { content: "•"; position: absolute; left: 4px; color: #00d2ff; font-weight: 900; }
+        .changelog strong { color: #fff; font-weight: 900; }
+        .changelog .tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 900; margin-left: 4px; }
+        .changelog .tag.gold { background: #5c4a0a; color: #ffdc00; }
+        .changelog .tag.red { background: #521616; color: #ff8888; }
+
+        #changelog-preview { transition: background 0.2s, transform 0.1s; }
+        #changelog-preview:hover { background: rgba(255,255,255,0.08); }
+        #changelog-preview:active { transform: scale(0.98); }
 
         #countdown-text { font-size: 8rem; font-weight: 900; text-shadow: 0 0 30px var(--primary); }
 
-        /* Editor Screen Styles */
         #editor-screen .editor-content {
             padding: 20px; box-sizing: border-box; height: 100%; display: flex; flex-direction: column; background: #12121e;
         }
-        #editor-piano-mini {
-            display: flex; flex: 1; height: 82px; background: #111; border-radius: 15px; position: relative; box-shadow: 0 4px 20px rgba(0,210,255,0.3);
-        }
-        #notes-list {
-            max-height: 420px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #00d2ff #2a2a40;
-        }
-        #notes-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        #notes-list::-webkit-scrollbar-thumb {
-            background: #00d2ff; border-radius: 20px;
-        }
+        #editor-piano-mini { display: flex; flex: 1; height: 82px; background: #111; border-radius: 15px; position: relative; box-shadow: 0 4px 20px rgba(0,210,255,0.3); }
+        #notes-list { max-height: 420px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #00d2ff #2a2a40; }
+        #notes-list::-webkit-scrollbar { width: 8px; }
+        #notes-list::-webkit-scrollbar-thumb { background: #00d2ff; border-radius: 20px; }
         .note-item {
             background: #1e1e2f; border-radius: 12px; margin-bottom: 8px; padding: 14px 18px;
             display: flex; align-items: center; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
@@ -163,8 +167,36 @@
 </head>
 <body>
     <div id="start-overlay">
-        <h1 style="margin-bottom: 20px;">Welcome to Piano Drop!</h1>
-        <p>Make sure your sound is on! (ringer on also)</p>
+        <h1>Welcome to Piano Drop!</h1>
+        <p class="subtitle">Make sure your sound is on! (ringer on also)</p>
+        <button id="play-button" onclick="beginGame()">PLAY</button>
+        <div class="changelog" id="changelog-preview" onclick="event.stopPropagation(); openChangelogPopup();" style="cursor: pointer;">
+            <h2>What's new in v1.4 <span class="date">(Oct 22 update)</span></h2>
+            <p style="margin: 0; color: #d5d5dd; font-size: 14px; text-align: center; line-height: 1.4;"></p>
+            <p style="margin: 10px 0 0 0; color: #00d2ff; font-size: 12px; font-weight: 700; text-align: center;">Tap to view update log →</p>
+        </div>
+    </div>
+    <div id="changelog-popup" class="overlay" style="z-index: 1500;">
+        <div class="changelog" style="max-height: 70vh; background: #12121e; margin: 20px;">
+            <h2>What's new in v1.4 <span class="date">(Oct 22 update)</span></h2>
+            <div class="changelog-section">
+                <h3>New Songs Added</h3>
+                <ul>
+                    <li><strong>Super Mario</strong> <span class="tag gold">GOLD</span></li>
+                    <li><strong>Interstellar</strong> <span class="tag gold">GOLD</span></li>
+                    <li><strong>We Wish You A Merry Christmas</strong> <span class="tag red">RED</span></li>
+                </ul>
+            </div>
+            <div class="changelog-section">
+                <h3>Improvements</h3>
+                <ul>
+                    <li>Added proper Home Screen with play button and update log</li>
+                </ul>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="closeChangelogPopup()">Close</button>
+            </div>
+        </div>
     </div>
     <div id="home-screen" class="screen">
         <div class="logo">Piano Drop</div>
@@ -277,7 +309,7 @@
         <button class="secondary" onclick="showScreen('home-screen')">Main Menu</button>
     </div>
     <!-- Credit footer - bottom middle, low opacity -->
-    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik v1.3</div>
+    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik v1.4</div>
     <script>
         // --- DATA & CONFIG ---
         let speedMultiplier = 1.0;
@@ -347,6 +379,14 @@
                 title: "Frère Jacques", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #2e8b57 0%, #3cb371 100%)",
                 notes: ['C4','D4','E4','C4','C4','D4','E4','C4','E4','F4','G4','-','E4','F4','G4','-','G4','A4','G4','F4','E4','C4','G4','A4','G4','F4','E4','C4']
             },
+            interstellar: {
+                title: "Interstellar", cardColor: "#5c4a0a", color: "linear-gradient(180deg,#10101a,#00d2ff)",
+                notes: ['D4','-','A4','-','E4','-','A4','-','F4','-','A4','-','G4','-','A4','-','-','E4','-','B4','-','F4','-','B4','-','G4','-','B4','-','A4','-','B4','-','-','A4','-','B4']
+            },
+            superMario: {
+                title: "Super Mario", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #07608C 0%, #2BE1FF 100%)",
+                notes: ['E4','E4','E4','C4','E4','G4','-','G4','E4','A4','B4','A#4','A4','G4','E4','G4','A4','F4','G4','-','E4','-','C4','D4','B4','-','C5']
+            },
             raidersMarch: {
                 title: "Raiders March", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #B00000 0%, #E36868 100%)",
                 notes: ['E4','F4','G4','C5','-','D4','E4','F4','-','G4','A4','B4','F4', '-','A4','B4','C5','D4','E4','-','E4','F4','G4','C4','-','D4','E4','F4','-','G4','A4','B4','F4','-','A4','B4','C4','D4','E4']
@@ -388,6 +428,10 @@
             canon: {
                 title: "Canon in C", cardColor: "#521616", color: "linear-gradient(180deg, #00008b 0%, #0000cd 100%)",
                 notes: ['E4','D4','C4','B4','A4','G4','A4','B4','E4','D4','C4','B4','A4','G4','A4','B4','C5','B4','A4','G4','F4','E4','F4','G4','C5','B4','A4','G4','F4','E4']
+            },
+            wwyamc: {
+                title: "We Wish You a Merry Christmas", cardColor: "#521616", color: "linear-gradient(180deg, #001a0e 0%, #0e6b2a 100%)",
+                notes: ['D4','G4','G4','A4','G4','F#4','E4','-','E4','A4','A4','B4','A4','G4','F#4','D4','-','D4','B4','B4','C5','B4','A4','G4','E4','-','D4','E4','A4','F#4','G4']
             }
         };
         let customSongs = [];
@@ -410,7 +454,27 @@
         `;
         document.getElementById('preview-piano').innerHTML = pianoHTML;
         document.getElementById('game-piano').innerHTML = pianoHTML;
-        // --- AUDIO ENGINE v2 - Mobile-optimized + debug logs ---
+
+        // --- CHANGELOG POPUP ---
+        function openChangelogPopup() {
+            document.getElementById('changelog-popup').classList.add('active');
+        }
+        function closeChangelogPopup() {
+            document.getElementById('changelog-popup').classList.remove('active');
+        }
+        document.getElementById('changelog-popup').addEventListener('click', function(e) {
+            if (e.target === this) closeChangelogPopup();
+        });
+
+        // --- BEGIN GAME (Play button handler) ---
+        function beginGame() {
+            initAudio();
+            document.getElementById('start-overlay').style.display = 'none';
+            loadCustomSongs();
+            showScreen('home-screen');
+        }
+
+        // --- AUDIO ENGINE ---
         let audioCtx = null;
         const frequencies = {
             'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
@@ -1087,11 +1151,11 @@
                 animationFrame = requestAnimationFrame(loop);
             }
         }
-        document.getElementById('start-overlay').addEventListener('click', function() {
-            initAudio();
-            this.style.display = 'none';
-            loadCustomSongs();
-            showScreen('home-screen');
+        // Start overlay click (anywhere on the overlay still works as a fallback)
+        document.getElementById('start-overlay').addEventListener('click', function(e) {
+            if (e.target.id === 'play-button') return; // button handles itself
+            if (e.target.closest('#changelog-preview')) return; // preview handles itself
+            beginGame();
         });
     </script>
 </body>
