@@ -171,26 +171,17 @@
         <p class="subtitle">Make sure your sound is on! (ringer on also)</p>
         <button id="play-button" onclick="beginGame()">PLAY</button>
         <div class="changelog" id="changelog-preview" onclick="event.stopPropagation(); openChangelogPopup();" style="cursor: pointer;">
-            <h2>What's new in v1.4 <span class="date">(Oct 22 update)</span></h2>
-            <p style="margin: 0; color: #d5d5dd; font-size: 14px; text-align: center; line-height: 1.4;"></p>
+            <h2>What's new in v1.5 <span class="date">(Oct 25 update)</span></h2>
             <p style="margin: 10px 0 0 0; color: #00d2ff; font-size: 12px; font-weight: 700; text-align: center;">Tap to view update log →</p>
         </div>
     </div>
     <div id="changelog-popup" class="overlay" style="z-index: 1500;">
         <div class="changelog" style="max-height: 70vh; background: #12121e; margin: 20px;">
-            <h2>What's new in v1.4 <span class="date">(Oct 22 update)</span></h2>
+            <h2>What's new in v1.5 <span class="date">(Oct 25 update)</span></h2>
             <div class="changelog-section">
                 <h3>New Songs Added</h3>
                 <ul>
-                    <li><strong>Super Mario</strong> <span class="tag gold">GOLD</span></li>
-                    <li><strong>Interstellar</strong> <span class="tag gold">GOLD</span></li>
-                    <li><strong>We Wish You A Merry Christmas</strong> <span class="tag red">RED</span></li>
-                </ul>
-            </div>
-            <div class="changelog-section">
-                <h3>Improvements</h3>
-                <ul>
-                    <li>Added proper Home Screen with play button and update log</li>
+                    <li><strong>2 new songs (Those Eyes, Home Alone)</strong></li>
                 </ul>
             </div>
             <div style="text-align: center; margin-top: 20px;">
@@ -309,7 +300,7 @@
         <button class="secondary" onclick="showScreen('home-screen')">Main Menu</button>
     </div>
     <!-- Credit footer - bottom middle, low opacity -->
-    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik v1.4</div>
+    <div style="position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; opacity: 0.75; color: #8DBBCC; z-index: 9999; pointer-events: none; text-align: center; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">Made By Vewerty Ploik v1.5</div>
     <script>
         // --- DATA & CONFIG ---
         let speedMultiplier = 1.0;
@@ -395,6 +386,10 @@
                 title: "Star Wars", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #07608C 0%, #2BE1FF 100%)",
                 notes: ['C4','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','D4','C5','-','G4','-','F4','E4','F4','D4','-','G4','G4','A4','A4','F4','E4','D4','C4','-','G4','D4']
             },
+            homeAlone: {
+                title: "Home Alone", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #3C8D0D 0%, #C30F16 100%)",
+                notes: ['G4','-','E4','-','G4','-','E4','-','C5','-','G4','-','-','C4','D4','E4','F4','G4','-','F4','E4','D4','C4']
+            },
             jurassicPark: {
                 title: "Jurassic Park",
                 cardColor: "#5c4a0a",
@@ -406,6 +401,10 @@
                 cardColor: "#5c4a0a",
                 color: "linear-gradient(180deg, #6700FF 0%, #C59CFF 100%)",
                 notes: ['G4','-','-','E4','-','-','B4','-','-','G4','G4','E4','E4','B4','-','G4','-','G4', '-', '-','E4', '-', '-','B4', '-', '-','G4','G4','E4','E4','B4','-','G4']
+            },
+            thoseEyes: {
+                title: "Those Eyes", cardColor: "#5c4a0a", color: "linear-gradient(180deg, #10101a 0%, #00d2ff 100%)",
+                notes: ['F4','G4','G4','A4','-','A4','G4','F4','G4','-','A4','A4','A4','G4','F4','G4']
             },
             heapirate: {
                 title: "He’s A Pirate!",
